@@ -1,0 +1,8 @@
+{
+  "name": "NeoteriX: Where AI Drives Industry",
+  "description": "An AI-powered ecosystem providing manufacturers with instant product audits, downloadable risk reports, and a multilingual community to eliminate \"blind launches\" and foster global collaboration.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
