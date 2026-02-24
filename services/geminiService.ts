@@ -1,157 +1,91 @@
 
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import { AnalysisInput, ProductFeedback } from "../types";
+import { GoogleGenAI, Type } from "@google/genai";
+import { NGO, RewardSource, Language, Region } from "../types";
 
-export const generateLoginHero = async (): Promise<string | null> => {
+export const generateImpactInsight = async (
+  amount: number, 
+  ngo: NGO, 
+  source?: RewardSource, 
+  lang: Language = 'en',
+  region: Region = 'US'
+): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          {
-            text: "A hyper-realistic, high-end industrial AI interface. Mindful, futuristic architectural structure floating in a void of soft light and liquid indigo particles. Cinematic lighting, 4k, elegant and professional industrial aesthetics.",
-          },
-        ],
-      },
+      model: "gemini-3-flash-preview",
+      contents: `You are an impact advisor. The user has donated ${amount} (in their local currency for region ${region}) to ${ngo.name} (${ngo.type}). They redirected this from ${source || 'rewards'}. 
+      Explain the tangible impact in exactly 2 inspiring sentences. 
+      IMPORTANT: Respond ONLY in the ${lang} language.`,
       config: {
-        imageConfig: {
-          aspectRatio: "1:1"
-        }
+        thinkingConfig: { thinkingBudget: 0 }
       }
     });
-
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        return `data:image/png;base64,${part.inlineData.data}`;
-      }
-    }
-    return null;
+    return response.text || "Impact analysis unavailable.";
   } catch (error) {
-    console.error("Failed to generate login image", error);
-    return null;
+    console.error("Gemini Error:", error);
+    return "...";
   }
 };
 
-export const analyzeProduct = async (input: AnalysisInput): Promise<ProductFeedback> => {
+export const generateImpactVideo = async (ngo: NGO): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  const targetLanguage = input.language || 'English';
-  
-  const prompt = `
-    You are NeoteriX, an elite AI Product Intelligence auditor for Industry 4.0. Your goal is to review a product and provide high-fidelity feedback in ${targetLanguage}.
-    Where AI Drives Industry is our motto.
-    
-    Product Name: ${input.name}
-    Category: ${input.category}
-    Description: ${input.description}
-    Code/Technical Info:
-    ${input.codeOrSpecs}
+  const prompts: Record<string, string> = {
+    'Orphanage': 'A heartwarming cinematic 3D animation of a child smiling and opening a new book in a vibrant, sunlit library, high detail, Pixar style, soft lighting.',
+    'Old Age Home': 'A peaceful cinematic 3D animation of an elderly person laughing and walking in a blooming, lush garden with butterflies, golden hour lighting, high detail.',
+    'Special Needs': 'A joyful cinematic 3D animation of a diverse group of children high-fiving in a colorful sensory room, soft textures, uplifting atmosphere.',
+    'Education': 'A cinematic close-up of a student writing in a notebook with glowing constellations emerging from the pages, magical, high detail.',
+    'Environment': 'A breathtaking time-lapse of a sapling growing into a massive tree in a pristine forest, sun rays piercing through leaves, ultra-realistic.'
+  };
 
-    RULES FOR YOUR RESPONSE:
-    1. Use professional yet simple language.
-    2. Be honest but kind.
-    3. Focus on industrial impact, tech logic, and human clarity.
-    4. Provide the report in ${targetLanguage}.
-
-    Provide a structured response in JSON format covering:
-    - overview: A clear summary with professional industrial focus.
-    - detailedDescription: A longer (4-5 sentences) explanation of the product for a public showcase.
-    - readinessScore: 0 to 100.
-    - metrics: Score 0-100 for ux, security, performance, marketFit, innovation.
-    - strengths: List of 3-5 good things.
-    - vulnerabilities: List of problems with 'issue', 'severity', 'description', 'solution', and 'codeSnippet'.
-    - suggestions: List of simple 'category', 'action', 'benefit'.
-    - roadmap: 3-5 simple next steps.
-    - targetUsers: List of 'persona', 'reason', and 'reachOutStrategy'.
-  `;
-
-  const parts = [
-    { text: prompt },
-    ...input.files.map(f => ({
-      inlineData: {
-        mimeType: f.mimeType,
-        data: f.data.split(',')[1]
-      }
-    }))
-  ];
-
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-pro-preview',
-    contents: { parts },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          overview: { type: Type.STRING },
-          detailedDescription: { type: Type.STRING },
-          readinessScore: { type: Type.NUMBER },
-          metrics: {
-            type: Type.OBJECT,
-            properties: {
-              ux: { type: Type.NUMBER },
-              security: { type: Type.NUMBER },
-              performance: { type: Type.NUMBER },
-              marketFit: { type: Type.NUMBER },
-              innovation: { type: Type.NUMBER }
-            },
-            required: ["ux", "security", "performance", "marketFit", "innovation"]
-          },
-          strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-          vulnerabilities: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                issue: { type: Type.STRING },
-                severity: { type: Type.STRING },
-                description: { type: Type.STRING },
-                solution: { type: Type.STRING },
-                codeSnippet: { type: Type.STRING }
-              },
-              required: ["issue", "severity", "description", "solution"]
-            }
-          },
-          suggestions: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                category: { type: Type.STRING },
-                action: { type: Type.STRING },
-                benefit: { type: Type.STRING }
-              },
-              required: ["category", "action", "benefit"]
-            }
-          },
-          roadmap: { type: Type.ARRAY, items: { type: Type.STRING } },
-          targetUsers: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                persona: { type: Type.STRING },
-                reason: { type: Type.STRING },
-                reachOutStrategy: { type: Type.STRING }
-              },
-              required: ["persona", "reason", "reachOutStrategy"]
-            }
-          }
-        },
-        required: ["overview", "detailedDescription", "readinessScore", "metrics", "strengths", "vulnerabilities", "suggestions", "roadmap", "targetUsers"]
-      }
-    }
-  });
+  const prompt = prompts[ngo.type] || prompts['Education'];
 
   try {
-    const text = response.text;
-    if (!text) {
-      throw new Error("Empty response from AI");
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.1-fast-generate-preview',
+      prompt: prompt,
+      config: {
+        numberOfVideos: 1,
+        resolution: '720p',
+        aspectRatio: '16:9'
+      }
+    });
+
+    while (!operation.done) {
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      operation = await ai.operations.getVideosOperation({ operation: operation });
     }
-    return JSON.parse(text);
+
+    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+    return `${downloadLink}&key=${process.env.API_KEY}`;
   } catch (error) {
-    console.error("Failed to parse AI response", error);
-    throw new Error("Could not understand the AI's report. Please try again.");
+    console.error("Video Gen Error:", error);
+    throw error;
+  }
+};
+
+export const getPersonalizedCauseSuggestion = async (userInterests: string[], ngos: NGO[], lang: Language = 'en'): Promise<NGO> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ngoData = ngos.map(n => ({ id: n.id, name: n.name, type: n.type }));
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Pick one NGO ID from ${JSON.stringify(ngoData)} that matches interests ${userInterests.join(", ")}. Return ONLY the JSON. Respond in context of language ${lang}.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            suggestedId: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    
+    const result = JSON.parse(response.text.trim());
+    return ngos.find(n => n.id === result.suggestedId) || ngos[0];
+  } catch (error) {
+    return ngos[0];
   }
 };

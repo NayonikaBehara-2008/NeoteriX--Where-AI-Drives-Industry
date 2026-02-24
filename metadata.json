@@ -1,8 +1,7 @@
 {
-  "name": "NeoteriX: Where AI Drives Industry",
-  "description": "An AI-powered ecosystem providing manufacturers with instant product audits, downloadable risk reports, and a multilingual community to eliminate \"blind launches\" and foster global collaboration.",
+  "name": "JoyJar: Gift Your Savings",
+  "description": "A compassionate platform where your shopping discounts and cashback rewards are collected in a digital jar of joy. Support orphanages, old age homes, and schools by redirecting small savings into huge impact.",
   "requestFramePermissions": [
-    "camera",
-    "microphone"
+    "camera"
   ]
 }
