@@ -1,78 +1,85 @@
 
-export type Region = 'US' | 'EU' | 'IN' | 'BR' | 'UK';
-export type Language = 'en' | 'es' | 'fr' | 'hi' | 'pt';
-
-export interface CurrencyConfig {
-  code: string;
-  symbol: string;
-  locale: string;
-}
-
-export enum RewardSource {
-  PAYPAL = 'PayPal',
-  STRIPE = 'Card Rewards',
-  AMEX = 'Member Points',
-  APPLE_PAY = 'Apple Cash',
-  UPI = 'PhonePe / GPay',
-  PIX = 'Pix Cashback',
-  REVOLUT = 'Revolut Spare Change',
-  VENMO = 'Venmo Balance',
-  STORE_CREDIT = 'Merchant Discount'
-}
-
-export enum Category {
-  ELECTRONICS = 'Electronics',
-  FASHION = 'Fashion',
-  HOME = 'Home & Living',
-  BEAUTY = 'Beauty & Health',
-  FOOD = 'Food & Drinks'
-}
-
-export interface Product {
+export interface HumanReview {
   id: string;
-  name: string;
-  description: string;
-  price: number;
-  discountPrice: number;
-  image: string;
-  category: Category;
+  reviewerName: string;
+  content: string;
+  rating: number;
+  timestamp: number;
 }
 
-export interface IncomingReward {
+export interface Message {
   id: string;
-  amount: number;
-  source: RewardSource;
-  timestamp: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  timestamp: number;
 }
 
-export interface NGO {
-  id: string;
-  name: string;
-  type: 'Orphanage' | 'Old Age Home' | 'Special Needs' | 'Environment' | 'Education';
-  description: string;
-  image: string;
-  location: string;
-  needs: string[];
-}
-
-export interface DonationRecord {
-  id: string;
-  date: string;
-  amount: number;
-  ngoId: string;
-  source: RewardSource;
+export interface ProductFeedback {
+  id?: string;
+  creatorId?: string;
+  timestamp?: number;
+  category: string; // New: Product industry category
+  overview: string;
+  detailedDescription?: string;
+  readinessScore: number;
+  creatorName?: string;
+  isPublic?: boolean;
+  humanReviews?: HumanReview[];
+  views?: number; // New: Social metric
+  likes?: number; // New: Social metric
+  techStack?: string[]; // New: Technical metadata
+  metrics: {
+    ux: number;
+    security: number;
+    performance: number;
+    marketFit: number;
+    innovation: number;
+  };
+  strengths: string[];
+  vulnerabilities: {
+    issue: string;
+    severity: 'Critical' | 'High' | 'Medium' | 'Low';
+    description: string;
+    solution: string;
+    codeSnippet?: string;
+  }[];
+  suggestions: {
+    category: string;
+    action: string;
+    benefit: string;
+  }[];
+  roadmap: string[];
+  targetUsers: {
+    persona: string;
+    reason: string;
+    reachOutStrategy: string;
+  }[];
 }
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  avatar: string;
-  totalDonated: number;
-  points: number;
-  tier: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
-  region: Region;
-  language: Language;
+  phone: string;
+  role: string;
+  language: string;
+  company?: string;
+  following: string[];
+  followersCount: number;
 }
 
-export type ViewState = 'dashboard' | 'capture' | 'ngos' | 'rewards' | 'ai-impact';
+export interface AnalysisFile {
+  data: string;
+  mimeType: string;
+  name: string;
+}
+
+export interface AnalysisInput {
+  name: string;
+  category: string;
+  description: string;
+  codeOrSpecs: string;
+  files: AnalysisFile[];
+  language?: string;
+}
